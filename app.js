@@ -406,10 +406,22 @@ function renderTasks() {
         emptyState.classList.add('visible');
     } else {
         emptyState.classList.remove('visible');
-        activeTasks.forEach(task => {
+        activeTasks.forEach((task, index) => {
             const li = document.createElement('li');
             li.className = `task-item`;
-            li.id = `task-${task.id}`; // Add ID for animation
+            li.id = `task-${task.id}`;
+
+            // Drag and Drop Attributes
+            li.setAttribute('draggable', 'true');
+            li.setAttribute('data-index', index); // Index within activeTasks
+
+            // Drag Events
+            li.addEventListener('dragstart', dragStart);
+            li.addEventListener('dragover', dragOver);
+            li.addEventListener('drop', dragDrop);
+            li.addEventListener('dragenter', dragEnter);
+            li.addEventListener('dragleave', dragLeave);
+            li.addEventListener('dragend', dragEnd);
 
             li.innerHTML = `
                 <div class="checkbox" onclick="toggleTask(${task.id})"></div>
@@ -421,6 +433,56 @@ function renderTasks() {
             taskList.appendChild(li);
         });
     }
+}
+
+// Drag and Drop Logic
+let dragStartIndex;
+
+function dragStart() {
+    dragStartIndex = +this.closest('li').getAttribute('data-index');
+    this.classList.add('dragging');
+}
+
+function dragOver(e) {
+    e.preventDefault(); // Necessary to allow dropping
+}
+
+function dragDrop() {
+    const dragEndIndex = +this.getAttribute('data-index');
+    reorderTasks(dragStartIndex, dragEndIndex);
+    this.classList.remove('over');
+}
+
+function dragEnter() {
+    this.classList.add('over');
+}
+
+function dragLeave() {
+    this.classList.remove('over');
+}
+
+function dragEnd() {
+    this.classList.remove('dragging');
+    // Clean up any remaining 'over' classes
+    const items = document.querySelectorAll('.task-item');
+    items.forEach(item => item.classList.remove('over'));
+}
+
+function reorderTasks(fromIndex, toIndex) {
+    // 1. Separate active and completed tasks
+    const activeTasks = tasks.filter(t => !t.completed);
+    const completedTasks = tasks.filter(t => t.completed);
+
+    // 2. Move item in activeTasks array
+    const itemToMove = activeTasks[fromIndex];
+    activeTasks.splice(fromIndex, 1);
+    activeTasks.splice(toIndex, 0, itemToMove);
+
+    // 3. Reconstruct tasks array (active first, then completed)
+    tasks = [...activeTasks, ...completedTasks];
+
+    // 4. Save and re-render
+    saveTasks();
 }
 
 function escapeHtml(text) {
