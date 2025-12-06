@@ -438,6 +438,16 @@ input[type="text"]:focus {
     background: rgba(30, 41, 59, 0.9);
 }
 
+.task-item.dragging {
+    opacity: 0.5;
+    background: var(--glass-bg);
+}
+
+.task-item.over {
+    border: 2px dashed var(--primary-color);
+    transform: scale(1.02);
+}
+
 .task-item.completed {
     opacity: 0.6;
     background: rgba(0, 0, 0, 0.2);
